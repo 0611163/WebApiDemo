@@ -16,10 +16,10 @@ namespace WebApiDemo.Services
         private IDBSession _db;
         private IDBSession _secondDB;
 
-        public DBTestService(IDBSession db, SecondDBSession oracleDB)
+        public DBTestService(IDBSession db, SecondDBSession secondDB)
         {
             _db = db;
-            _secondDB = oracleDB.DBSession;
+            _secondDB = secondDB.DBSession;
         }
 
         #region OnStart

@@ -1,4 +1,4 @@
-﻿using Dapper.LiteSql;
+﻿using Dapper.Lite;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Porvider;

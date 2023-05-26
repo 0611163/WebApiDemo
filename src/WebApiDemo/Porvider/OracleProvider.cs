@@ -1,10 +1,10 @@
-﻿using Dapper.LiteSql;
+﻿using Dapper.Lite;
 using Oracle.ManagedDataAccess.Client;
 using System.Data.Common;
 
 namespace Porvider
 {
-    public class OracleProvider : OracleProviderBase, IDBProvider
+    public class OracleProvider : OracleProviderBase, IDbProvider
     {
         #region 创建 DbConnection
         public override DbConnection CreateConnection(string connectionString)

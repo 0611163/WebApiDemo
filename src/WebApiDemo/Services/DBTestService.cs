@@ -1,4 +1,4 @@
-﻿using Dapper.LiteSql;
+﻿using Dapper.Lite;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 using Porvider;
@@ -13,13 +13,17 @@ namespace WebApiDemo.Services
     /// </summary>
     public class DBTestService : ServiceBase
     {
-        private IDBSession _db;
-        private IDBSession _secondDB;
+        private IDbSession _db;
+        private IDbSession _secondDB;
+        private IDapperLiteClient _dbClient;
+        private IDapperLiteClient _secondDbClient;
 
-        public DBTestService(IDBSession db, SecondDBSession secondDB)
+        public DBTestService(IDbSession db, SecondDBSession secondDB, IDapperLiteClient dbClient, IDapperLiteClient secondDbClient)
         {
             _db = db;
             _secondDB = secondDB.DBSession;
+            _dbClient = dbClient;
+            _secondDbClient = secondDbClient;
         }
 
         #region OnStart
@@ -43,7 +47,7 @@ namespace WebApiDemo.Services
         /// </summary>
         public async Task<List<SysUser>> Test()
         {
-            return await _db
+            return await _dbClient.GetSession()
                 .Queryable<SysUser>()
                 .Where(t => t.Id > 0)
                 .ToPageListAsync(1, 100);
@@ -54,7 +58,7 @@ namespace WebApiDemo.Services
         /// </summary>
         public async Task<List<SysUser>> TestSecond()
         {
-            return await _secondDB
+            return await _secondDbClient.GetSession()
                 .Queryable<SysUser>()
                 .Where(t => t.Id > 0)
                 .ToPageListAsync(1, 100);

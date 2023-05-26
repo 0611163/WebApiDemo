@@ -1,4 +1,4 @@
-﻿using Dapper.LiteSql;
+﻿using Dapper.Lite;
 
 namespace Porvider
 {
@@ -7,9 +7,9 @@ namespace Porvider
     /// </summary>
     public class SecondDBSession
     {
-        public IDBSession DBSession { get; set; }
+        public IDbSession DBSession { get; set; }
 
-        public SecondDBSession(IDBSession dBSession)
+        public SecondDBSession(IDbSession dBSession)
         {
             DBSession = dBSession;
         }

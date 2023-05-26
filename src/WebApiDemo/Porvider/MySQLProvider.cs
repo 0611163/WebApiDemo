@@ -1,10 +1,10 @@
-﻿using Dapper.LiteSql;
+﻿using Dapper.Lite;
 using MySqlConnector;
 using System.Data.Common;
 
 namespace Porvider
 {
-    public class MySQLProvider : MySQLProviderBase, IDBProvider
+    public class MySQLProvider : MySQLProviderBase, IDbProvider
     {
         public static readonly string ReturnIdSQL = "select @@IDENTITY";
 

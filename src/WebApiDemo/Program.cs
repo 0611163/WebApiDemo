@@ -10,17 +10,27 @@ using System.Reflection;
 using Utils;
 using System.Net;
 using Models;
-using Dapper.LiteSql;
+using Dapper.Lite;
 using Porvider;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var db = new LiteSqlClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
-var secondDB = new LiteSqlClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
+var db = new DapperLiteClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
+var secondDB = new DapperLiteClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
 
 // Add services to the container.
+// 注册数据库IDapperLiteClient
+builder.Services.AddSingleton<IDapperLiteClient, IDapperLiteClient>(serviceProvider =>
+{
+    return db;
+});
+// 注册第二个数据库IDapperLiteClient
+builder.Services.AddSingleton<IDapperLiteClient, IDapperLiteClient>(serviceProvider =>
+{
+    return secondDB;
+});
 // 注册数据库DBSession
-builder.Services.AddScoped<IDBSession, IDBSession>(serviceProvider =>
+builder.Services.AddScoped<IDbSession, IDbSession>(serviceProvider =>
 {
     return db.GetSession();
 });

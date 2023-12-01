@@ -1,7 +1,7 @@
 ﻿namespace Utils
 {
-    [RegisterService]
-    public abstract class ServiceBase : IService
+    [RegisterService(ServiceLifetime.Singleton)]
+    public abstract class SingletonService : IService
     {
         #region OnStart
         public virtual Task OnStart()

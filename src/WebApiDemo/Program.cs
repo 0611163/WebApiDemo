@@ -1,5 +1,3 @@
-using Autofac.Extensions.DependencyInjection;
-using Autofac;
 using Filters;
 using FluentValidation.AspNetCore;
 using FluentValidation;
@@ -12,32 +10,30 @@ using System.Net;
 using Models;
 using Dapper.Lite;
 using Porvider;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using WebApiDemo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var db = new DapperLiteClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
-var secondDB = new DapperLiteClient(builder.Configuration.GetConnectionString("DefaultConnection"), DBType.MySQL, new MySQLProvider());
+var db = new DapperLite(builder.Configuration.GetConnectionString("DefaultConnection"), new MySQLProvider());
+var secondDB = new DapperLite<SecondDbFlag>(builder.Configuration.GetConnectionString("DefaultConnection"), new MySQLProvider());
 
 // Add services to the container.
 // 注册数据库IDapperLiteClient
-builder.Services.AddSingleton<IDapperLiteClient, IDapperLiteClient>(serviceProvider =>
-{
-    return db;
-});
+builder.Services.AddSingleton<IDapperLite>(db);
 // 注册第二个数据库IDapperLiteClient
-builder.Services.AddSingleton<IDapperLiteClient, IDapperLiteClient>(serviceProvider =>
+builder.Services.AddSingleton<IDapperLite<SecondDbFlag>>(secondDB);
+// 注册数据库DbSession
+
+builder.Services.AddScoped<IDbSession>(serviceProvider =>
 {
-    return secondDB;
+    return serviceProvider.GetService<IDapperLite>().GetSession();
 });
-// 注册数据库DBSession
-builder.Services.AddScoped<IDbSession, IDbSession>(serviceProvider =>
+// 注册第二个数据库DbSession
+builder.Services.AddScoped<IDbSession<SecondDbFlag>>(serviceProvider =>
 {
-    return db.GetSession();
-});
-// 注册第二个数据库DBSession
-builder.Services.AddScoped<SecondDBSession, SecondDBSession>(serviceProvider =>
-{
-    return new SecondDBSession(secondDB.GetSession());
+    return serviceProvider.GetService<IDapperLite<SecondDbFlag>>().GetSession();
 });
 
 builder.Services.AddControllers();
@@ -53,6 +49,24 @@ builder.Services.AddSwaggerGen(c =>
         Title = ".NET Web API 示例接口",
         Version = "1.0",
         Description = ".NET Web API 示例接口"
+    });
+    c.AddSecurityDefinition("auth", new OpenApiSecurityScheme()
+    {
+        Name = "token",
+        In = ParameterLocation.Header
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+    {
+        {
+            new OpenApiSecurityScheme()
+            {
+                Reference = new OpenApiReference() {
+                    Id = "auth",
+                    Type = ReferenceType.SecurityScheme
+                }
+            },
+            new List<string>()
+        }
     });
     var path = Path.Combine(AppContext.BaseDirectory, "WebApiDemo.xml"); // xml文档绝对路径
     c.IncludeXmlComments(path, true); // 显示控制器层注释
@@ -108,16 +122,21 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 });
 
 // ASP.NET Core整合Autofac
+/*
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());//通过工厂替换，把Autofac整合进来
 builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
     ServiceFactory.SetBuilder(containerBuilder);
     ServiceFactory.RegisterAssembly(Assembly.GetExecutingAssembly()); //注册服务
 });
+*/
+ServiceFactory.SetBuilder(builder.Services);
+ServiceFactory.RegisterAssembly(Assembly.GetExecutingAssembly()); //注册服务
 
 var app = builder.Build();
 
-ServiceFactory.SetContainer((app.Services as AutofacServiceProvider).LifetimeScope as IContainer);
+Task.Run(async () => await ServiceFactory.InitStaticClasses(Assembly.GetExecutingAssembly())); //初始化静态类
+ServiceFactory.SetContainer(app.Services);
 Task.Run(async () => await ServiceFactory.StartAllService()); //启动服务，注意：服务启动完成之前，调用接口会异常
 
 // Configure the HTTP request pipeline.

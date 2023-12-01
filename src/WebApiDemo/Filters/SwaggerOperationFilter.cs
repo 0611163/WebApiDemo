@@ -16,7 +16,7 @@ namespace Filters
             }
 
             var allowAnonymousAttribute = context.ApiDescription.ActionDescriptor.EndpointMetadata.OfType<AllowAnonymousAttribute>();
-            if (allowAnonymousAttribute != null)
+            if (false && allowAnonymousAttribute != null)
             {
                 operation.Parameters.Insert(0, new OpenApiParameter { Name = "token", In = ParameterLocation.Header, Description = "Header", Required = true });
             }

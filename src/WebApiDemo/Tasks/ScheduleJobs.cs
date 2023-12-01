@@ -9,7 +9,7 @@ namespace WebApiDemo.Tasks
     /// <summary>
     /// 定时任务管理
     /// </summary>
-    public class ScheduleJobs : ServiceBase
+    public class ScheduleJobs : SingletonService
     {
         #region 变量
         private IScheduler _scheduler;
